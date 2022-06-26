@@ -1,6 +1,8 @@
 include .env.example
 export
 
+SOURCE_DIRS = cmd config docs internal pkg integration-test
+
 # HELP =================================================================================================================
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -10,7 +12,7 @@ help: ## Display this help screen
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 compose-up: ### Run docker-compose
-	docker-compose up --build -d postgres rabbitmq && docker-compose logs -f
+	docker-compose up --build -d postgres && docker-compose logs -f
 .PHONY: compose-up
 
 compose-up-integration-test: ### Run docker-compose with integration test
@@ -31,20 +33,24 @@ run: swag-v1 ### swag run
 .PHONY: run
 
 docker-rm-volume: ### remove docker volume
-	docker volume rm go-clean-template_pg-data
+	docker volume rm notes-api_pg-data
 .PHONY: docker-rm-volume
 
 linter-golangci: ### check by golangci linter
 	golangci-lint run
 .PHONY: linter-golangci
 
-linter-hadolint: ### check by hadolint linter
-	git ls-files --exclude='Dockerfile*' --ignored | xargs hadolint
-.PHONY: linter-hadolint
-
 linter-dotenv: ### check by dotenv linter
 	dotenv-linter
 .PHONY: linter-dotenv
+
+.PHONY: fmt
+fmt: ## Format source using gofmt
+	@gofmt -l -s -w $(SOURCE_DIRS)
+
+.PHONY: fmtcheck
+fmtcheck: ## Checks for style violation using gofmt
+	@gofmt -l -s $(SOURCE_DIRS) | grep ".*\.go"; if [ "$$?" = "0" ]; then exit 1; fi
 
 test: ### run test
 	go test -v -cover -race ./internal/...
@@ -54,12 +60,21 @@ integration-test: ### run integration-test
 	go clean -testcache && go test -v ./integration-test/...
 .PHONY: integration-test
 
+.PHONY: install
+install:
+	go get github.com/golang/mock/gomock
+	go install github.com/golang/mock/mockgen
+	go get -u -d github.com/golang-migrate/migrate/cli github.com/lib/pq
+	go build -tags 'postgres' -o /usr/local/bin/migrate github.com/golang-migrate/migrate/cli
+	go get -u github.com/swaggo/swag/cmd/swag
+	go install github.com/swaggo/swag/cmd/swag@latest
+
 mock: ### run mockery
 	mockery --all -r --case snake
 .PHONY: mock
 
 migrate-create:  ### create new migration
-	migrate create -ext sql -dir migrations 'migrate_name'
+	@migrate create -ext sql -dir migrations $(MIG_NAME)
 .PHONY: migrate-create
 
 migrate-up: ### migration up

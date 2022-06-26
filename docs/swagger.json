@@ -1,17 +1,17 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Using a translation service as an example",
-        "title": "Go Clean Template API",
+        "description": "A REST API backend application that can be used to manage personal notes.",
+        "title": "Go Notes API",
         "contact": {},
         "version": "1.0"
     },
     "host": "localhost:8080",
     "basePath": "/v1",
     "paths": {
-        "/translation/do-translate": {
-            "post": {
-                "description": "Translate a text",
+        "/note": {
+            "get": {
+                "description": "Show all notes",
                 "consumes": [
                     "application/json"
                 ],
@@ -19,10 +19,41 @@
                     "application/json"
                 ],
                 "tags": [
-                    "translation"
+                    "note"
                 ],
-                "summary": "Translate",
-                "operationId": "do-translate",
+                "summary": "Show notes",
+                "operationId": "notes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new note",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create note",
+                "operationId": "notes",
                 "parameters": [
                     {
                         "description": "Set up translation",
@@ -30,7 +61,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.doTranslateRequest"
+                            "$ref": "#/definitions/v1.createNoteRequest"
                         }
                     }
                 ],
@@ -38,7 +69,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.Translation"
+                            "$ref": "#/definitions/entity.Note"
                         }
                     },
                     "400": {
@@ -56,9 +87,9 @@
                 }
             }
         },
-        "/translation/history": {
-            "get": {
-                "description": "Show all translation history",
+        "/note/:id": {
+            "put": {
+                "description": "update note by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -66,15 +97,21 @@
                     "application/json"
                 ],
                 "tags": [
-                    "translation"
+                    "note"
                 ],
-                "summary": "Show history",
-                "operationId": "history",
+                "summary": "Update note",
+                "operationId": "update-note",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.historyResponse"
+                            "$ref": "#/definitions/v1.response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
                         }
                     },
                     "500": {
@@ -88,57 +125,69 @@
         }
     },
     "definitions": {
-        "entity.Translation": {
+        "entity.Note": {
             "type": "object",
             "properties": {
-                "destination": {
-                    "type": "string",
-                    "example": "en"
+                "author": {
+                    "$ref": "#/definitions/entity.User"
                 },
-                "original": {
-                    "type": "string",
-                    "example": "текст для перевода"
+                "createdAt": {
+                    "type": "string"
                 },
-                "source": {
-                    "type": "string",
-                    "example": "auto"
+                "id": {
+                    "type": "string"
                 },
-                "translation": {
-                    "type": "string",
-                    "example": "text for translation"
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
-        "v1.doTranslateRequest": {
+        "entity.User": {
             "type": "object",
-            "required": [
-                "destination",
-                "original",
-                "source"
-            ],
             "properties": {
-                "destination": {
-                    "type": "string",
-                    "example": "en"
+                "createdAt": {
+                    "type": "string"
                 },
-                "original": {
-                    "type": "string",
-                    "example": "текст для перевода"
+                "email": {
+                    "type": "string"
                 },
-                "source": {
-                    "type": "string",
-                    "example": "auto"
+                "id": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
-        "v1.historyResponse": {
+        "v1.ListResponse": {
             "type": "object",
             "properties": {
                 "history": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Translation"
+                        "$ref": "#/definitions/entity.Note"
                     }
+                }
+            }
+        },
+        "v1.createNoteRequest": {
+            "type": "object",
+            "required": [
+                "message"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "example message"
                 }
             }
         },

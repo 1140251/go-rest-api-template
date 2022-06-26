@@ -1,42 +1,47 @@
 basePath: /v1
 definitions:
-  entity.Translation:
+  entity.Note:
     properties:
-      destination:
-        example: en
+      author:
+        $ref: '#/definitions/entity.User'
+      createdAt:
         type: string
-      original:
-        example: текст для перевода
+      id:
         type: string
-      source:
-        example: auto
+      message:
         type: string
-      translation:
-        example: text for translation
+      status:
+        type: string
+      updatedAt:
         type: string
     type: object
-  v1.doTranslateRequest:
+  entity.User:
     properties:
-      destination:
-        example: en
+      createdAt:
         type: string
-      original:
-        example: текст для перевода
+      email:
         type: string
-      source:
-        example: auto
+      id:
         type: string
-    required:
-      - destination
-      - original
-      - source
+      updatedAt:
+        type: string
+      username:
+        type: string
     type: object
-  v1.historyResponse:
+  v1.ListResponse:
     properties:
       history:
         items:
-          $ref: '#/definitions/entity.Translation'
+          $ref: '#/definitions/entity.Note'
         type: array
+    type: object
+  v1.createNoteRequest:
+    properties:
+      message:
+        example: example message
+        type: string
+    required:
+    - message
     type: object
   v1.response:
     properties:
@@ -47,30 +52,24 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: Using a translation service as an example
-  title: Go Clean Template API
+  description: A REST API backend application that can be used to manage personal
+    notes.
+  title: Go Notes API
   version: "1.0"
 paths:
-  /translation/do-translate:
-    post:
+  /note:
+    get:
       consumes:
-        - application/json
-      description: Translate a text
-      operationId: do-translate
-      parameters:
-        - description: Set up translation
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/v1.doTranslateRequest'
+      - application/json
+      description: Show all notes
+      operationId: notes
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.Translation'
+            $ref: '#/definitions/v1.ListResponse'
         "400":
           description: Bad Request
           schema:
@@ -79,27 +78,59 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/v1.response'
-      summary: Translate
+      summary: Show notes
       tags:
-        - translation
-  /translation/history:
-    get:
+      - note
+    post:
       consumes:
-        - application/json
-      description: Show all translation history
-      operationId: history
+      - application/json
+      description: Create a new note
+      operationId: notes
+      parameters:
+      - description: Set up translation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.createNoteRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.historyResponse'
+            $ref: '#/definitions/entity.Note'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/v1.response'
-      summary: Show history
+      summary: Create note
+  /note/:id:
+    put:
+      consumes:
+      - application/json
+      description: update note by id
+      operationId: update-note
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Update note
       tags:
-        - translation
+      - note
 swagger: "2.0"
