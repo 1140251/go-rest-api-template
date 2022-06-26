@@ -2,7 +2,8 @@ package note
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/pkg/errors"
 
 	"github.com/1140251/go-template/internal/note/entity"
 )
@@ -22,7 +23,7 @@ func NewNoteService(r Repo) Service {
 func (s *NService) Create(ctx context.Context, note *entity.Note) (*entity.Note, error) {
 	err := s.repo.Store(ctx, note)
 	if err != nil {
-		return nil, fmt.Errorf("NService - Create - s.repo.Store: %w", err)
+		return nil, errors.Wrap(err, "NService - Create - s.repo.Store")
 	}
 
 	return note, nil
